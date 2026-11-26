@@ -1,0 +1,37 @@
+# ===== 密钥与本地环境（.env 里有真实口令，绝不进仓库）=====
+.env
+.env.local
+.env.*.local
+
+# ===== IDE =====
+.idea/
+*.iml
+.vscode/
+
+# ===== macOS =====
+.DS_Store
+
+# ===== 前端 =====
+# frontend/ 里 create-next-app 自带的 .gitignore 已覆盖这些；
+# 根目录再兜一层，防止将来目录结构调整后漏掉
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# ===== 后端构建产物 =====
+# Maven 的 target/； Gradle 的 build/、.gradle/、.kotlin/（现在的 Gradle 练习工程挪走后也不怕误提交）
+target/
+build/
+.gradle/
+.kotlin/
+*.class
+
+# ===== 日志 =====
+*.log
+logs/
+# 注意：以下文件是【要提交】的，别加进忽略：
+#   .nvmrc（Node 版本锁定）、.java-version（JDK 版本锁定）、
+#   .env.example（变量清单，只有占位符）、deploy/compose.dev.yml（口令走环境变量引用）
+/base.md

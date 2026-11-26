@@ -1,0 +1,3 @@
+schema: spec-driven
+created: 2026-11-24
+goal: 能从一个版本复制出完整的新版本，目录树可以在页面上管理

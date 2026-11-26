@@ -1,0 +1,40 @@
+schema: spec-driven
+
+# Project context. Everything here is injected into every OpenSpec instruction
+# (all four artifacts, apply and archive), so keep it to what an agent cannot
+# infer by reading the code.
+context: |
+  所有产出物和代码注释用简体中文书写。
+  这是一个学习项目：作者要亲手写后端业务逻辑。tasks.md 里每个任务都标注了“你写 / 你设计 / AI 写 / 你操作”，必须按标注执行。
+  “你写”和“你设计”的任务：先解释目标和知识点，等作者先设计或实现，AI 只做审查和提问；不要未经要求直接给出完整实现。
+  一次只推进一个任务；一个任务大约等于一个工作日的 2 小时。
+  术语以 docs/domain-model.md 为准：“文档”是一篇叶子文章；“发布”针对语言版本，“上线”针对产品版本；“修订”是发布时的内容快照。
+  不引入路线图之外的中间件、表和依赖。需要偏离时先更新变更的 proposal 和 design；难以逆转的决定在 docs/decisions/ 记一条 ADR。
+
+# Per-artifact rules. They add to the built-in rules and never replace them.
+rules:
+  proposal:
+    - 只写为什么改和改什么，控制在 40 行以内；怎么做放到 design.md
+  specs:
+    - 每条需求只描述一个可观察的行为，每条场景都要能对应一个测试
+    - 不写类名、库名和实现步骤
+  design:
+    - 稳定的通用约定引用 docs/ 下的文档，不要重复；这里只写本次变更特有的决定和取舍
+    - 每个决定写清放弃了什么方案、为什么
+  tasks:
+    - 每个任务不超过 2.5 小时，并在任务行里写明验证方式
+    - 每个任务行标注耗时和由谁来写（你写 / 你设计 / AI 写 / 你操作）
+    - 测试和文档跟随所属任务组，不要堆到最后
+
+# Advisory guidance for how apply and archive are carried out.
+operations:
+  apply:
+    guidance:
+      - 开始前先读 docs/learning/ 里对应周的文档，向作者说明本周目标和知识点
+      - 标注为“你写”或“你设计”的任务，等作者给出设计或实现后再审查，不要替作者写完
+      - 每完成一个任务就勾选，并确认 ./mvnw test 通过
+      - 每完成一个任务并勾选之后，按 AGENTS.md 里「任务复盘」的格式，在对话中输出一份简短的复盘
+  archive:
+    guidance:
+      - 归档前和作者一起做本阶段复盘，把结论写进 docs/learning/ 对应周文档的复盘记录
+      - 归档后确认 openspec/specs/ 里的内容与实际实现一致

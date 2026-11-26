@@ -1,0 +1,59 @@
+# 开发用的基础设施：MySQL 8.4 和 Redis 7。
+# 后端和前端在宿主机上运行（IDE 或命令行），通过映射到 127.0.0.1 的端口访问它们。
+# 生产环境的编排是另一个文件，见第 10 周的变更 add-deployment。
+#
+# 用法（在仓库根目录执行，变量来自根目录的 .env）：
+#   docker compose --env-file .env -f deploy/compose.dev.yml up -d
+#   docker compose --env-file .env -f deploy/compose.dev.yml ps
+#   docker compose --env-file .env -f deploy/compose.dev.yml down      # 停止并删除容器，数据卷保留
+#   docker compose --env-file .env -f deploy/compose.dev.yml down -v   # 连数据卷一起删，数据会丢
+
+services:
+  mysql:
+    image: mysql:8.4
+    # 宿主机或 Docker 重启后自动拉起；被手动 stop 过的除外
+    restart: unless-stopped
+    # 只绑定 127.0.0.1：这两个服务只有本机的后端在用，不暴露给局域网
+    ports:
+      - "127.0.0.1:${DOCHUB_MYSQL_PORT:-3306}:3306"
+    environment:
+      # 下面两项由镜像的初始化脚本读取：数据卷是空的第一次启动时建库、建账号
+      MYSQL_DATABASE: dochub
+      MYSQL_USER: dochub
+      # 口令来自 .env；没配置就报错，不用默认值兜底
+      MYSQL_PASSWORD: ${DOCHUB_MYSQL_PASSWORD:?请在 .env 里设置 DOCHUB_MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DOCHUB_MYSQL_ROOT_PASSWORD:?请在 .env 里设置 DOCHUB_MYSQL_ROOT_PASSWORD}
+    # 项目约定字符集 是 utf8mb4（8.x 的默认值，这里写出来是为了明确）
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      # 镜像第一次启动要先初始化数据目录，这期间端口还没开，所以不能只看“容器在运行”。
+      # $$ 是 Compose 的转义，到容器里执行时才展开成 $MYSQL_ROOT_PASSWORD
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    # 开启 AOF 持久化，数据写进下面的数据卷
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      # 宿主机的 6379 已被 brew 装的本地 Redis 占用，所以默认映射到 6380
+      - "127.0.0.1:${DOCHUB_REDIS_PORT:-6380}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  # 具名卷由 Docker 管理：容器删了重建，数据还在；只有 down -v 才会删
+  mysql-data:
+  redis-data:

@@ -1,0 +1,3 @@
+schema: spec-driven
+created: 2026-11-24
+goal: 能登录，令牌放在 JS 读不到的地方，管理端接口按角色限制
